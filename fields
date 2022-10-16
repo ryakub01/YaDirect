@@ -1,0 +1,215 @@
+  report_dict = {
+            "CAMPAIGN_STAT": {
+                "type": "CUSTOM_REPORT",
+                "partition_name": "Date",
+                "fields": [
+                    {"name": "Date", "type": "Date"},
+                    {"name": "CampaignId", "type": "VARCHAR(255)"},
+                    {"name": "CampaignName", "type": "VARCHAR(255)"},
+                    {"name": "CampaignType", "type": "VARCHAR(255)"},
+                    {"name": "Impressions", "type": "Int64"},
+                    {"name": "Cost", "type": "Float64"},
+                    {"name": "Clicks", "type": "Int64"}
+                ]
+            },
+            "CAMPAIGN_DEVICE_AND_PLACEMENT_STAT": {
+                "type": "CUSTOM_REPORT",
+                "partition_name": "Date",
+                "fields": [
+                    {"name": "Date", "type": "Date"},
+                    {"name": "CampaignId", "type": "VARCHAR(255)"},
+                    {"name": "CampaignType", "type": "VARCHAR(255)"},
+                    {"name": "CampaignName", "type": "VARCHAR(255)"},
+                    {"name": "AdNetworkType", "type": "VARCHAR(255)"},
+                    {"name": "Device", "type": "VARCHAR(255)"},
+                    {"name": "Impressions", "type": "Int64"},
+                    {"name": "Cost", "type": "Float64"},
+                    {"name": "Clicks", "type": "Int64"}
+                ]
+            },
+            "CAMPAIGN_GEO_STAT": {
+                "type": "CAMPAIGN_PERFORMANCE_REPORT",
+                "partition_name": "Date",
+                "fields": [
+                    {"name": "Date", "type": "Date"},
+                    {"name": "CampaignId", "type": "VARCHAR(255)"},
+                    {"name": "CampaignName", "type": "VARCHAR(255)"},
+                    {"name": "CampaignType", "type": "VARCHAR(255)"},
+                    {"name": "LocationOfPresenceName", "type": "VARCHAR(255)"},
+                    {"name": "TargetingLocationId", "type": "VARCHAR(255)"},
+                    {"name": "Impressions", "type": "Int64"},
+                    {"name": "Cost", "type": "Float64"},
+                    {"name": "Clicks", "type": "Int64"}
+                ]
+            },
+            "CAMPAIGN_PLACEMENT_STAT": {
+                "type": "CAMPAIGN_PERFORMANCE_REPORT",
+                "partition_name": "Date",
+                "fields": [
+                    {"name": "Date", "type": "Date"},
+                    {"name": "CampaignId", "type": "VARCHAR(255)"},
+                    {"name": "CampaignName", "type": "VARCHAR(255)"},
+                    {"name": "CampaignType", "type": "VARCHAR(255)"},
+                    {"name": "Placement", "type": "VARCHAR(255)"},
+                    {"name": "Impressions", "type": "Int64"},
+                    {"name": "Cost", "type": "Float64"},
+                    {"name": "Clicks", "type": "Int64"}
+                ]
+            },
+            "CAMPAIGN_SOCDEM_DEVICE_STAT": {
+                "type": "CAMPAIGN_PERFORMANCE_REPORT",
+                "partition_name": "Date",
+                "fields": [
+                    {"name": "Date", "type": "Date"},
+                    {"name": "CampaignId", "type": "VARCHAR(255)"},
+                    {"name": "CampaignName", "type": "VARCHAR(255)"},
+                    {"name": "Device", "type": "VARCHAR(255)"},
+                    {"name": "CarrierType", "type": "VARCHAR(255)"},
+                    {"name": "CampaignType", "type": "VARCHAR(255)"},
+                    {"name": "MobilePlatform", "type": "VARCHAR(255)"},
+                    {"name": "Age", "type": "VARCHAR(255)"},
+                    {"name": "Gender", "type": "VARCHAR(255)"},
+                    {"name": "Impressions", "type": "Int64"},
+                    {"name": "Cost", "type": "Float64"},
+                    {"name": "Clicks", "type": "Int64"}
+                ]
+            },
+            "AD_STAT": {
+                "type": "AD_PERFORMANCE_REPORT",
+                "partition_name": "Date",
+                "fields": [
+                    {"name": "Date", "type": "Date"},
+                    {"name": "CampaignId", "type": "VARCHAR(255)"},
+                    {"name": "CampaignName", "type": "VARCHAR(255)"},
+                    {"name": "CampaignType", "type": "VARCHAR(255)"},
+                    {"name": "AdId", "type": "VARCHAR(255)"},
+                    {"name": "AdFormat", "type": "VARCHAR(255)"},
+                    {"name": "AdNetworkType", "type": "VARCHAR(255)"},
+                    {"name": "AdGroupId", "type": "VARCHAR(255)"},
+                    {"name": "AdGroupName", "type": "VARCHAR(255)"},
+                    {"name": "Impressions", "type": "Int64"},
+                    {"name": "Cost", "type": "Float64"},
+                    {"name": "Clicks", "type": "Int64"}
+                ]
+            },
+            "AD_DEVICE_STAT": {
+                "type": "AD_PERFORMANCE_REPORT",
+                "partition_name": "Date",
+                "fields": [
+                    {"name": "Date", "type": "Date"},
+                    {"name": "CampaignId", "type": "VARCHAR(255)"},
+                    {"name": "CampaignName", "type": "VARCHAR(255)"},
+                    {"name": "CampaignType", "type": "VARCHAR(255)"},
+                    {"name": "AdId", "type": "VARCHAR(255)"},
+                    {"name": "AdFormat", "type": "VARCHAR(255)"},
+                    {"name": "AdGroupId", "type": "VARCHAR(255)"},
+                    {"name": "AdGroupName", "type": "VARCHAR(255)"},
+                    {"name": "Device", "type": "VARCHAR(255)"},
+                    {"name": "AdNetworkType", "type": "VARCHAR(255)"},
+                    {"name": "Impressions", "type": "Int64"},
+                    {"name": "Cost", "type": "Float64"},
+                    {"name": "Clicks", "type": "Int64"}
+                ]
+            },
+            "REACH_AND_FREQUENCY_STAT": {
+                "type": "REACH_AND_FREQUENCY_PERFORMANCE_REPORT",
+                "partition_name": "Date",
+                "fields": [
+                    {"name": "Date", "type": "Date"},
+                    {"name": "CampaignId", "type": "VARCHAR(255)"},
+                    {"name": "CampaignName", "type": "VARCHAR(255)"},
+                    {"name": "CampaignType", "type": "VARCHAR(255)"},
+                    {"name": "AdGroupId", "type": "VARCHAR(255)"},
+                    {"name": "AdGroupName", "type": "VARCHAR(255)"},
+                    {"name": "AdId", "type": "VARCHAR(255)"},
+                    {"name": "Impressions", "type": "Int64"},
+                    {"name": "ImpressionReach", "type": "Int64"},
+                    {"name": "AvgImpressionFrequency", "type": "FLOAT"},
+                    {"name": "Cost", "type": "Float64"},
+                    {"name": "Clicks", "type": "Int64"}
+                ]
+            },
+            "KEYWORD_AD_STAT": {
+                "type": "CUSTOM_REPORT",
+                "partition_name": "Date",
+                "fields": [
+                    {"name": "Date", "type": "Date"},
+                    {"name": "CampaignId", "type": "VARCHAR(255)"},
+                    {"name": "CampaignName", "type": "VARCHAR(255)"},
+                    {"name": "CampaignType", "type": "VARCHAR(255)"},
+                    {"name": "AdGroupId", "type": "VARCHAR(255)"},
+                    {"name": "AdGroupName", "type": "VARCHAR(255)"},
+                    {"name": "AdId", "type": "VARCHAR(255)"},
+                    {"name": "Impressions", "type": "Int64"},
+                    {"name": "Clicks", "type": "Int64"},
+                    {"name": "Cost", "type": "Float64"},
+                    {"name": "CriterionId", "type": "VARCHAR(255)"},
+                    {"name": "Criterion", "type": "VARCHAR(255)"},
+                    {"name": "CriteriaType", "type": "VARCHAR(255)"}
+                ]
+            },
+            "KEYWORD_SOCDEM_STAT": {
+                "type": "CUSTOM_REPORT",
+                "partition_name": "Date",
+                "fields": [
+                    {"name": "Date", "type": "Date"},
+                    {"name": "CampaignId", "type": "VARCHAR(255)"},
+                    {"name": "CampaignName", "type": "VARCHAR(255)"},
+                    {"name": "CampaignType", "type": "VARCHAR(255)"},
+                    {"name": "AdGroupId", "type": "VARCHAR(255)"},
+                    {"name": "AdGroupName", "type": "VARCHAR(255)"},
+                    {"name": "AdId", "type": "VARCHAR(255)"},
+                    {"name": "CriterionId", "type": "VARCHAR(255)"},
+                    {"name": "Criterion", "type": "VARCHAR(255)"},
+                    {"name": "CriteriaType", "type": "VARCHAR(255)"},
+                    {"name": "Slot", "type": "VARCHAR(255)"},
+                    {"name": "Age", "type": "VARCHAR(255)"},
+                    {"name": "Gender", "type": "VARCHAR(255)"},
+                    {"name": "Impressions", "type": "Int64"},
+                    {"name": "Cost", "type": "Float64"},
+                    {"name": "Clicks", "type": "Int64"}
+                ]
+            },
+            "KEYWORD_DEVICE_STAT": {
+                "type": "CRITERIA_PERFORMANCE_REPORT",
+                "partition_name": "Date",
+                "fields": [
+                    {"name": "Date", "type": "Date"},
+                    {"name": "CampaignId", "type": "VARCHAR(255)"},
+                    {"name": "CampaignName", "type": "VARCHAR(255)"},
+                    {"name": "CampaignType", "type": "VARCHAR(255)"},
+                    {"name": "Device", "type": "VARCHAR(255)"},
+                    {"name": "Impressions", "type": "Int64"},
+                    {"name": "Cost", "type": "Float64"},
+                    {"name": "Clicks", "type": "Int64"},
+                    {"name": "CriterionId", "type": "VARCHAR(255)"},
+                    {"name": "Criterion", "type": "VARCHAR(255)"},
+                    {"name": "CriteriaType", "type": "VARCHAR(255)"}
+                ]
+            },
+            "KEYWORD_DEVICE_AD_STAT": {
+                "type": "CUSTOM_REPORT",
+                "partition_name": "Date",
+                "fields": [
+                    {"name": "Date", "type": "Date"},
+                    {"name": "CampaignId", "type": "VARCHAR(255)"},
+                    {"name": "CampaignName", "type": "VARCHAR(255)"},
+                    {"name": "CampaignType", "type": "VARCHAR(255)"},
+                    {"name": "AdGroupId", "type": "VARCHAR(255)"},
+                    {"name": "AdGroupName", "type": "VARCHAR(255)"},
+                    {"name": "AdId", "type": "VARCHAR(255)"},
+                    {"name": "Impressions", "type": "Int64"},
+                    {"name": "Cost", "type": "Float64"},
+                    {"name": "Clicks", "type": "Int64"},
+                    {"name": "CriterionId", "type": "VARCHAR(255)"},
+                    {"name": "Criterion", "type": "VARCHAR(255)"},
+                    {"name": "CriterionType", "type": "VARCHAR(255)"},
+                    {"name": "AdNetworkType", "type": "VARCHAR(255)"},
+                    {"name": "Device", "type": "VARCHAR(255)"},
+                    {"name": "Slot", "type": "VARCHAR(255)"},
+                    {"name": "Placement", "type": "VARCHAR(255)"},
+                    {"name": "TargetingLocationId", "type": "VARCHAR(255)"},
+                    {"name": "TargetingLocationName", "type": "VARCHAR(255)"}
+                ]
+            }
+        }
