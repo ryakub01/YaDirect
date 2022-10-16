@@ -1,0 +1,467 @@
+import json, requests, re, sys
+sys.path.insert(0, '//home//isobar//traffic//connectors//connectors')
+from _Utils import create_fields, my_slice
+from _BigQuery import BigQuery
+import pandas as pd
+
+
+class YandexDirect:
+    def __init__(self, access_token, client_name, path_to_json, client_login=""):
+        self.url = "https://api.direct.yandex.com/json/v5/"
+        self.client_name = client_name
+        self.client_id = re.sub('[.-]', '_', client_login)
+        self.client_login = client_login
+        self.bq = BigQuery(path_to_json)
+        self.data_set_id = f"{client_name}_YaDirect_{self.client_id}"
+        self.headers_report = {
+            "Authorization": "Bearer " + access_token,
+            "Accept-Language": "ru"}
+
+        self.report_dict = {
+            "CLIENTS": {
+                "fields": {
+                    'ClientId': {"type": "STRING", "mode": "NULLABLE", "description": "ClientId :STRING"},
+                    'Login': {"type": "STRING", "mode": "NULLABLE", "description": "Login :STRING"},
+                    'ClientInfo': {"type": "STRING", "mode": "NULLABLE", "description": "ClientInfo :STRING"}
+                }
+            },
+            "CAMPAIGNS": {
+                "fields": {
+                    "Name": {"type": "STRING", "mode": "NULLABLE", "description": "Name :STRING"},
+                    "Id": {"type": "STRING", "mode": "NULLABLE", "description": "Id :STRING"},
+                    "Type": {"type": "STRING", "mode": "NULLABLE", "description": "Type :STRING"}
+                }
+            },
+            "ADGROUPS": {
+                "fields": {
+                    "Id": {"type": "STRING", "mode": "NULLABLE", "description": "Id :STRING"},
+                    "Name": {"type": "STRING", "mode": "NULLABLE", "description": "Name :STRING"},
+                    "CampaignId": {"type": "STRING", "mode": "NULLABLE", "description": "CampaignId :STRING"},
+                    "Type": {"type": "STRING", "mode": "NULLABLE", "description": "Type :STRING"},
+                    "NegativeKeywordSharedSetIds": {"type": "STRING", "mode": "NULLABLE", "description": "Negative keyword shared set Ids :STRING"},
+                    "RegionIds": {"type": "STRING", "mode": "NULLABLE", "description": "Region Ids :STRING"},
+                    "RestrictedRegionIds": {"type": "STRING", "mode": "NULLABLE", "description": "Restricted region Ids :STRING"},
+
+                }
+            },
+            "ADS": {
+                "fields": {
+                    "Type": {"type": "STRING", "mode": "NULLABLE", "description": "Type :STRING"},
+                    "Text": {"type": "STRING", "mode": "NULLABLE", "description": "Text :STRING"},
+                    "Title": {"type": "STRING", "mode": "NULLABLE", "description": "Title :STRING"},
+                    "DisplayDomain": {"type": "STRING", "mode": "NULLABLE", "description": "DisplayDomain :STRING"},
+                    "Href": {"type": "STRING", "mode": "NULLABLE", "description": "Href :STRING"},
+                    "DisplayUrlPath": {"type": "STRING", "mode": "NULLABLE", "description": "DisplayUrlPath :STRING"},
+                    "Title2": {"type": "STRING", "mode": "NULLABLE", "description": "Title2 :STRING"},
+                    "AdCategories": {"type": "STRING", "mode": "NULLABLE", "description": "AdCategories :STRING"},
+                    "AdGroupId": {"type": "STRING", "mode": "NULLABLE", "description": "AdGroupId :STRING"},
+                    "CampaignId": {"type": "STRING", "mode": "NULLABLE", "description": "CampaignId :STRING"},
+                    "Id": {"type": "STRING", "mode": "NULLABLE", "description": "Id :STRING"},
+                    "CreativeId": {"type": "STRING", "mode": "NULLABLE", "description": "CreativeId :STRING"},
+                    "ThumbnailUrl": {"type": "STRING", "mode": "NULLABLE", "description": "ThumbnailUrl :STRING"},
+                    "PreviewUrl": {"type": "STRING", "mode": "NULLABLE", "description": "ThumbnailUrl :STRING"},
+                    "AdImageHash": {"type": "STRING", "mode": "NULLABLE", "description": "AdImageHash :STRING"},
+                    "Mobile": {"type": "STRING", "mode": "NULLABLE", "description": "Mobile :STRING"},
+                    "VCardId": {"type": "STRING", "mode": "NULLABLE", "description": "VCardId :STRING"},
+                    "SitelinkSetId": {"type": "STRING", "mode": "NULLABLE", "description": "SitelinkSetId :STRING"},
+                    "AdExtensionsIds": {"type": "STRING", "mode": "NULLABLE", "description": "AdExtensions :STRING"},
+                    "AdExtensionsType": {"type": "STRING", "mode": "NULLABLE", "description": "AdExtensions Type :STRING"},
+                    "AgeLabel": {"type": "STRING", "mode": "NULLABLE", "description": "AgeLabel :STRING"},
+                    "State": {"type": "STRING", "mode": "NULLABLE", "description": "State :STRING"},
+
+                }
+            },
+
+            "KEYWORD": {
+                "fields": {
+                    "Id": {"type": "STRING", "mode": "NULLABLE", "description": "Id :STRING"},
+                    "Keyword": {"type": "STRING", "mode": "NULLABLE", "description": "Keyword :STRING"},
+                    "Bid": {"type": "STRING", "mode": "NULLABLE", "description": "Bid :STRING"},
+                    "ContextBid": {"type": "STRING", "mode": "NULLABLE", "description": "Context Bid :STRING"},
+                    "AdGroupId": {"type": "STRING", "mode": "NULLABLE", "description": "AdGroupId :STRING"},
+                    "CampaignId": {"type": "STRING", "mode": "NULLABLE", "description": "CampaignId :STRING"}
+                }
+            },
+
+            "vCard": {
+                "fields": {
+                    "Id": {"type": "STRING", "mode": "NULLABLE", "description": "Id :STRING"},
+                    "CampaignId": {"type": "STRING", "mode": "NULLABLE", "description": "CampaignId :STRING"},
+                    "Country": {"type": "STRING", "mode": "NULLABLE", "description": "Country :STRING"},
+                    "City": {"type": "STRING", "mode": "NULLABLE", "description": "City :STRING"},
+                    "WorkTime": {"type": "STRING", "mode": "NULLABLE", "description": "WorkTime :STRING"},
+                    "CountryCode": {"type": "STRING", "mode": "NULLABLE", "description": "Country Code :STRING"},
+                    "CityCode": {"type": "STRING", "mode": "NULLABLE", "description": "City Code :STRING"},
+                    "PhoneNumber": {"type": "STRING", "mode": "NULLABLE", "description": "Phone Number :STRING"},
+                    "Extension": {"type": "STRING", "mode": "NULLABLE", "description": "Extension :STRING"},
+                    "Street": {"type": "STRING", "mode": "NULLABLE", "description": "Street :STRING"},
+                    "House": {"type": "STRING", "mode": "NULLABLE", "description": "House :STRING"},
+                    "Building": {"type": "STRING", "mode": "NULLABLE", "description": "Building :STRING"},
+                    "Apartment": {"type": "STRING", "mode": "NULLABLE", "description": "Apartment :STRING"},
+                    "InstantMessenger": {"type": "STRING", "mode": "NULLABLE", "description": "Instant Messenger :STRING"},
+                    "CompanyName": {"type": "STRING", "mode": "NULLABLE", "description": "Company Name :STRING"},
+                    "ExtraMessage": {"type": "STRING", "mode": "NULLABLE", "description": "Extra Message :STRING"},
+                    "ContactEmail": {"type": "STRING", "mode": "NULLABLE", "description": "Contact Email :STRING"},
+                    "Ogrn": {"type": "STRING", "mode": "NULLABLE", "description": "Ogrn :STRING"},
+                    "MetroStationId": {"type": "STRING", "mode": "NULLABLE", "description": "Metro Station Id :STRING"},
+                    "X": {"type": "STRING", "mode": "NULLABLE", "description": "X :STRING"},
+                    "Y": {"type": "STRING", "mode": "NULLABLE", "description": "Y :STRING"},
+                    "X1": {"type": "STRING", "mode": "NULLABLE", "description": "X1 :STRING"},
+                    "Y1": {"type": "STRING", "mode": "NULLABLE", "description": "Y1 :STRING"},
+                    "X2": {"type": "STRING", "mode": "NULLABLE", "description": "X2 :STRING"},
+                    "Y2": {"type": "STRING", "mode": "NULLABLE", "description": "Y2 :STRING"},
+                    "ContactPerson": {"type": "STRING", "mode": "NULLABLE", "description": "Contact Person :STRING"},
+                    "PointOnMap": {"type": "STRING", "mode": "NULLABLE", "description": "Point On Map :STRING"}
+
+                }
+            },
+
+            "CREATIVES": {
+                "fields": {
+                    "Id": {"type": "STRING", "mode": "NULLABLE", "description": "Id :STRING"},
+                    "Type": {"type": "STRING", "mode": "NULLABLE", "description": "Type :STRING"},
+                    "Name": {"type": "STRING", "mode": "NULLABLE", "description": "Name :STRING"},
+                    "PreviewUrl": {"type": "STRING", "mode": "NULLABLE", "description": "PreviewUrl :STRING"},
+                    "Width": {"type": "STRING", "mode": "NULLABLE", "description": "Width :STRING"},
+                    "Height": {"type": "STRING", "mode": "NULLABLE", "description": "Height :STRING"},
+                    "ThumbnailUrl": {"type": "STRING", "mode": "NULLABLE", "description": "ThumbnailUrl :STRING"},
+                    "Associated": {"type": "STRING", "mode": "NULLABLE", "description": "Associated :STRING"}
+                }
+            },
+
+            "SITELINKS": {
+                "fields": {
+                    "Id": {"type": "STRING", "mode": "NULLABLE", "description": "Id :STRING"},
+                    "Title": {"type": "STRING", "mode": "NULLABLE", "description": "Title :STRING"},
+                    "Href": {"type": "STRING", "mode": "NULLABLE", "description": "Href :STRING"},
+                    "Description": {"type": "STRING", "mode": "NULLABLE", "description": "Description :STRING"},
+                    "TurboPageId": {"type": "STRING", "mode": "NULLABLE", "description": "TurboPage Id :STRING"}
+                }
+            },
+
+
+            "REGIONS": {
+                "fields": {
+                    "GeoRegionId": {"type": "STRING", "mode": "NULLABLE", "description": "Geo Region Id :STRING"},
+                    "GeoRegionName": {"type": "STRING", "mode": "NULLABLE", "description": "Geo Region Name :STRING"},
+                    "GeoRegionType": {"type": "STRING", "mode": "NULLABLE", "description": "Geo Region Type :STRING"},
+                    "ParentId": {"type": "STRING", "mode": "NULLABLE", "description": "ParentId :STRING"}
+                    }
+            },
+
+
+            "AdExtensions": {
+                "fields": {
+                    "Id": {"type": "STRING", "mode": "NULLABLE", "description": "Id :STRING"},
+                    "Associated": {"type": "STRING", "mode": "NULLABLE", "description": "Associated :STRING"},
+                    "Type": {"type": "STRING", "mode": "NULLABLE", "description": "Type :STRING"},
+                    "CalloutText": {"type": "STRING", "mode": "NULLABLE", "description": "Callout Text :STRING"},
+                    "State": {"type": "STRING", "mode": "NULLABLE", "description": "State :STRING"},
+                    "Status": {"type": "STRING", "mode": "NULLABLE", "description": "Status :STRING"},
+                    "StatusClarification": {"type": "STRING", "mode": "NULLABLE", "description": "Status Clarification :STRING"},
+                    }
+            },
+
+
+
+
+
+            "ADIMAGES": {
+                "fields": {
+                    "AdImageHash": {"type": "STRING", "mode": "NULLABLE", "description": "AdImageHash :STRING"},
+                    "OriginalUrl": {"type": "STRING", "mode": "NULLABLE", "description": "OriginalUrl :STRING"},
+                    "PreviewUrl": {"type": "STRING", "mode": "NULLABLE", "description": "PreviewUrl :STRING"},
+                    "Name": {"type": "STRING", "mode": "NULLABLE", "description": "Name :STRING"},
+                    "Type": {"type": "STRING", "mode": "NULLABLE", "description": "Type :STRING"},
+                    "Subtype": {"type": "STRING", "mode": "NULLABLE", "description": "Subtype :STRING"},
+                    "Associated": {"type": "STRING", "mode": "NULLABLE", "description": "Associated :STRING"}
+                }
+            }
+        }
+
+        self.tables_with_schema, self.fields = create_fields(client_name, "YaDirect", self.report_dict, self.client_id)
+        self.bq.check_or_create_data_set(self.data_set_id)
+        self.bq.check_or_create_tables(self.tables_with_schema, self.data_set_id)
+
+    def __create_body_dict(self, **kwargs):
+        body = {
+            "method": "get",
+            "params": {
+
+            }
+        }
+        body['params'].update(kwargs)
+        jsonBody = json.dumps(body, ensure_ascii=False).encode('utf8')
+        return jsonBody
+
+    def __create_body(self, selection_criteria, field_names, limit, offset, **kwargs):
+        body = {
+            "method": "get",
+            "params": {
+                "SelectionCriteria": selection_criteria,
+                "FieldNames": field_names,
+                "Page": {
+                    "Limit": limit,
+                    "Offset": offset
+                }
+
+            }
+        }
+        body['params'].update(kwargs)
+        jsonBody = json.dumps(body, ensure_ascii=False).encode('utf8')
+        return jsonBody
+
+
+    def extract_dict(self, dict_el, res_dict=None):
+        if res_dict is None:
+            res_dict = {}
+        for key, value in dict_el.items():
+            if all([key == 'AdCategories', value is not None]):
+                res_dict['AdCategories'] = ','.join(value['Items'])
+            elif isinstance(value, dict):
+                res_dict = self.extract_dict(value, res_dict)
+            elif key == 'AdExtensions':
+                AdExtensionsIds = [str(x['AdExtensionId']) for x in value if x['Type'] == 'CALLOUT']
+                res_dict['AdExtensionsIds'] = ",".join(AdExtensionsIds)
+                res_dict['AdExtensionsType'] = "CALLOUT"
+            else:
+                res_dict[key] = value
+        return res_dict
+
+
+    def __request(self, selection_criteria, field_names, method, limit, offset, total_list, key, **kwargs):
+        jsonBody = self.__create_body(selection_criteria, field_names, limit, offset, **kwargs)
+        if method == "dictionaries":
+            jsonBody = self.__create_body_dict(**kwargs)
+        try:
+            data = requests.post(self.url+method, jsonBody, headers=self.headers_report).json()
+        except requests.exceptions.ConnectionError as error:
+            print(error)
+            data = requests.post(self.url + method, jsonBody, headers=self.headers_report).json()
+        # print(data)
+        # print(selection_criteria, selection_criteria, field_names, method, limit, offset, total_list, key, jsonBody, kwargs)
+        if 'result' in data:
+            if key in data['result']:
+                total_list += data['result'][key]
+        else:
+            print(data)
+            sys.exit("1")
+        if data['result'].get("LimitedBy", False):
+            offset += limit
+            return self.__request(selection_criteria, field_names, method, limit, offset, total_list, key)
+        return total_list
+
+    def get_agency_clients(self):
+        selection_criteria = {"Archived": "NO"}
+        field_names = ["ClientId", "ClientInfo", "Login"]
+        clients = self.__request(selection_criteria, field_names, "agencyclients", 10000, 0, [], "Clients")
+        client_list = [client['Login'] for client in clients]
+        return clients, client_list
+
+    def get_campaigns(self):
+        self.headers_report['Client-Login'] = self.client_login
+        selection_criteria = {}
+        field_names = ["Id", "Name", "Type"]
+        campaigns = self.__request(selection_criteria, field_names, "campaigns", 10000, 0, [], "Campaigns")
+        return campaigns
+
+    def get_creatives(self):
+        self.headers_report['Client-Login'] = self.client_login
+        selection_criteria = {}
+
+        field_names = ["Id", "Type", "Name", "PreviewUrl", "Width", "Height", "ThumbnailUrl", "Associated"]
+        creative = self.__request(selection_criteria, field_names, "creatives", 10000, 0, [], "Creatives")
+        return creative
+
+    def get_images(self):
+        self.headers_report['Client-Login'] = self.client_login
+        selection_criteria = {}
+
+        field_names = ["AdImageHash", "OriginalUrl", "PreviewUrl", "Name", "Type", "Subtype", "Associated"]
+        adImages = self.__request(selection_criteria, field_names, "adimages", 10000, 0, [], "AdImages")
+        return adImages
+
+    def get_adsets(self, campaign_ids_list):
+        result_adsets = []
+        slice_ids = my_slice(campaign_ids_list, 10)
+        self.headers_report['Client-Login'] = self.client_login
+        field_names = ["CampaignId", "Id", "Name", "Type", "NegativeKeywordSharedSetIds", "RegionIds", "RestrictedRegionIds"]
+
+        for ids in slice_ids:
+            selection_criteria = {"CampaignIds": ids}
+            adsets = self.__request(selection_criteria, field_names, "adgroups", 10000, 0, [], "AdGroups")
+            for adGroup in adsets:
+                middle = adGroup.copy()
+                for key, value in adGroup.items():
+                    if all([key == "RegionIds", value is not None]):
+                        value = ",".join([str(x) for x in value])
+                        middle[key] = value
+                    elif all([key in ["NegativeKeywordSharedSetIds", "RestrictedRegionIds"], value is not None]):
+                        value = ",".join([str(x) for x in value['Items']])
+                        middle[key] = value
+                result_adsets.append(middle)
+        return result_adsets
+
+    def get_ads(self, campaign_ids_list):
+        result_ads = []
+        slice_ids = my_slice(campaign_ids_list, 10)
+        self.headers_report['Client-Login'] = self.client_login
+        for ids in slice_ids:
+            selection_criteria = {"CampaignIds": ids}
+            field_names = ["AdCategories", "AdGroupId", "CampaignId", "Id", "Type", "AgeLabel", "State"]
+
+            params = {
+                "TextAdFieldNames": ["DisplayDomain", "AdImageHash", "Href", "Text", "Title", "Title2", "DisplayUrlPath",
+                "Mobile", "VCardId", "SitelinkSetId", "AdExtensions"],
+                "TextImageAdFieldNames": ["Href", "AdImageHash"],
+                "TextAdBuilderAdFieldNames": ["Href", "Creative"],
+                "CpcVideoAdBuilderAdFieldNames": ["Href", "Creative"],
+                "CpmBannerAdBuilderAdFieldNames": ["Href", "Creative"],
+                "CpmVideoAdBuilderAdFieldNames": ["Href", "Creative"]}
+            ads = self.__request(selection_criteria, field_names, "ads", 10000, 0, [], "Ads", **params)
+            result_ads += [self.extract_dict(ad) for ad in ads]
+        return result_ads
+
+    def get_keywords(self, campaign_ids_list):
+        result_keywords = []
+        slice_ids = my_slice(campaign_ids_list, 10)
+        self.headers_report['Client-Login'] = self.client_login
+        field_names = ["Id", "Keyword", "AdGroupId", "CampaignId", "Bid", "ContextBid"]
+        for ids in slice_ids:
+            selection_criteria = {"CampaignIds": ids}
+            keywords = self.__request(selection_criteria, field_names, "keywords", 10000, 0, [], "Keywords")
+            result_keywords += keywords
+        return result_keywords
+
+    def get_regions(self):
+
+        self.headers_report['Client-Login'] = self.client_login
+        field_names = []
+        selection_criteria = {}
+        params = {"DictionaryNames": ["GeoRegions"]}
+        regions = self.__request(selection_criteria, field_names, "dictionaries", 10000, 0, [], "GeoRegions", **params)
+        return regions
+
+    def get_vCards(self, vCard_ids_list):
+        result_vCards = []
+        slice_ids = my_slice(vCard_ids_list, 10)
+        self.headers_report['Client-Login'] = self.client_login
+        field_names = ["Id", "Country", "City", "Street", "House", "Building", "Apartment", "CompanyName", "ExtraMessage",
+        "ContactPerson", "ContactEmail", "MetroStationId", "CampaignId", "Ogrn", "WorkTime", "InstantMessenger", "Phone", "PointOnMap"]
+        for ids in slice_ids:
+            selection_criteria = {"Ids": ids}
+            vCards = self.__request(selection_criteria, field_names, "vcards", 10000, 0, [], "VCards")
+            result_vCards += [self.extract_dict(vCard) for vCard in vCards]
+        return result_vCards
+
+    def get_AdExtensions(self):
+        self.headers_report['Client-Login'] = self.client_login
+        field_names = ["Id", "Type", "Status", "StatusClarification", "Associated"]
+        params = {"CalloutFieldNames": ["CalloutText"]}
+        selection_criteria = {}
+        AdExtensions = self.__request(selection_criteria, field_names, "adextensions", 10000, 0, [], "AdExtensions", **params)
+        AdExtensions = [self.extract_dict(AdExtension) for AdExtension in AdExtensions]
+        return AdExtensions
+
+    def get_siteLinks(self, siteLinks_ids_list):
+        result_siteLinks = []
+        slice_ids = my_slice(siteLinks_ids_list, 10)
+        self.headers_report['Client-Login'] = self.client_login
+        field_names = ["Id"]
+        params = {"SitelinkFieldNames": ["Title", "Href", "Description", "TurboPageId"]}
+        for ids in slice_ids:
+            selection_criteria = {"Ids": ids}
+            Sitelinks = self.__request(selection_criteria, field_names, "sitelinks", 10000, 0, [], "SitelinksSets", **params)
+            for Sitelink in Sitelinks:
+                middle = {}
+                for key, value in Sitelink.items():
+                    if isinstance(value, list):
+                        for site_link in value:
+                            for k, v in site_link.items():
+                                middle[k] = v
+                    else:
+                        middle[key] = value
+
+                result_siteLinks.append(middle)
+        return result_siteLinks
+
+    def get_all_units(self):
+        campaigns = self.get_campaigns()
+        campaign_ids = [element['Id'] for element in campaigns]
+        campaignsDf = pd.DataFrame(campaigns)
+        campaignsDf = campaignsDf.fillna(value='0')
+        self.bq.insert_difference(campaignsDf, self.fields, self.data_set_id,
+                                  f"{self.client_name}_YaDirect_{self.client_id}_CAMPAIGNS", 'Id', 'Id', "%Y-%m-%d")
+
+        adGroups = self.get_adsets(campaign_ids)
+        adGroupsDf = pd.DataFrame(adGroups)
+        adGroupsDf = adGroupsDf.fillna(value='0')
+        self.bq.insert_difference(adGroupsDf, self.fields, self.data_set_id,
+                                  f"{self.client_name}_YaDirect_{self.client_id}_ADGROUPS", 'Id', 'Id', "%Y-%m-%d")
+
+        ads = self.get_ads(campaign_ids)
+        adsDf = pd.DataFrame(ads)
+        adsDf = adsDf.fillna(value='0')
+        self.bq.insert_difference(adsDf, self.fields, self.data_set_id,
+                                  f"{self.client_name}_YaDirect_{self.client_id}_ADS", 'Id', 'Id', "%Y-%m-%d")
+
+        creative = self.get_creatives()
+        creativeDf = pd.DataFrame(creative)
+        creativeDf = creativeDf.fillna(value='0')
+        self.bq.insert_difference(creativeDf, self.fields, self.data_set_id,
+                                  f"{self.client_name}_YaDirect_{self.client_id}_CREATIVES", 'Id', 'Id', "%Y-%m-%d")
+
+        adImages = self.get_images()
+        adImagesDf = pd.DataFrame(adImages)
+        adImagesDf = adImagesDf.fillna(value='0')
+        self.bq.insert_difference(adImagesDf, self.fields, self.data_set_id,
+                                  f"{self.client_name}_YaDirect_{self.client_id}_ADIMAGES", 'AdImageHash',
+                                  'AdImageHash', "%Y-%m-%d")
+
+
+        keywords = self.get_keywords(campaign_ids)
+        keywordsDf = pd.DataFrame(keywords)
+        keywordsDf = keywordsDf.fillna(value='0')
+        self.bq.insert_difference(keywordsDf, self.fields, self.data_set_id,
+                                  f"{self.client_name}_YaDirect_{self.client_id}_KEYWORD", 'Id', 'Id', "%Y-%m-%d")
+
+        VCardIds = adsDf[adsDf['VCardId'] != '0']['VCardId'].unique().tolist()
+        VCardIds = [str(int(x)) for x in VCardIds]
+        vCards = self.get_vCards(VCardIds)
+        vCardsDf = pd.DataFrame(vCards)
+        vCardsDf = vCardsDf.fillna(value='0')
+        self.bq.insert_difference(vCardsDf, self.fields, self.data_set_id,
+                                  f"{self.client_name}_YaDirect_{self.client_id}_vCard", 'Id', 'Id', "%Y-%m-%d")
+
+        SitelinkSetId = adsDf[adsDf['SitelinkSetId'] != '0']['SitelinkSetId'].unique().tolist()
+        SitelinkSetId = [str(int(x)) for x in SitelinkSetId]
+        SitelinkSet = self.get_siteLinks(SitelinkSetId)
+        SitelinkSetDf = pd.DataFrame(SitelinkSet)
+        SitelinkSetDf = SitelinkSetDf.fillna(value='0')
+
+        self.bq.insert_difference(SitelinkSetDf, self.fields, self.data_set_id,
+                                  f"{self.client_name}_YaDirect_{self.client_id}_SITELINKS", 'Id', 'Id', "%Y-%m-%d")
+
+
+
+        regions = self.get_regions()
+        regionsDf = pd.DataFrame(regions)
+        regionsDf = regionsDf.fillna(value='0')
+
+        self.bq.insert_difference(regionsDf, self.fields, self.data_set_id,
+                                  f"{self.client_name}_YaDirect_{self.client_id}_REGIONS", 'GeoRegionId', 'GeoRegionId', "%Y-%m-%d")
+
+        callout = self.get_AdExtensions()
+        calloutDf = pd.DataFrame(callout)
+        calloutDf = calloutDf.fillna(value='0')
+
+        self.bq.insert_difference(calloutDf, self.fields, self.data_set_id,
+                                  f"{self.client_name}_YaDirect_{self.client_id}_AdExtensions", 'Id', 'Id', "%Y-%m-%d")
+
+
+
+
+
+        return []
+
+
